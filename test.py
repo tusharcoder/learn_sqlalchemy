@@ -12,7 +12,7 @@ Column("full_name",String),
 
 addresses = Table("addresses",metadata,
 Column("id",Integer,primary_key=True),
-Column("user",None,ForeignKey("users.id")),
+Column("user_id",None,ForeignKey("users.id")),
 Column("email_address",String,nullable=False),
 )
 
@@ -31,19 +31,46 @@ con.execute(ins, [
 {"name" : "foo 4","full_name":"foo bar 4"}
 ]) #executing the bulk insert using multiple data dictionaries in the execute statement
 
+address_ins = addresses.insert()
+con.execute(address_ins, [
+{"user_id" : 1,"email_address":"foo1@somewhere.com"},
+
+{"user_id" : 1,"email_address":"foo1email2@somewhere.com"},
+
+{"user_id" : 2,"email_address":"foo2email1@somewhere.com"},
+
+{"user_id" : 3,"email_address":"foo3email1@somewhere.com"},
+
+{"user_id" : 4,"email_address":"foo4email1@somewhere.com"},
+
+{"user_id" : 5,"email_address":"foo5email1@somewhere.com"},
+
+]) #executing the bulk insert using multiple data dictionaries in the execute statement
+
+
 #select statements
 
-select = select([users.c.name,users.c.full_name]) #specify the columns using the c attribute of the table object where columns of the table are the attributes of the c object
-result = con.execute(select)
+select_st = select([users.c.name,users.c.full_name]) #specify the columns using the c attribute of the table object where columns of the table are the attributes of the c object
+result = con.execute(select_st)
 for row in result:
     print("name: %s, full_name: %s"% (row["name"],row["full_name"])) #print the values in the row by the named columns we can also use the indexes like
 
 result.close() #its good to close the result to discard the pending rows
 
-result = con.execute(select)
+result = con.execute(select_st)
 for row in result:
     print("name: %s, full_name: %s"% (row[0], row[1])) # print the rows using the indexes
 
-
 result.close()
+
+#select statement with join
+select_st = select([users.c.name, users.c.full_name, addresses.c.user_id, addresses.c.email_address]).where(users.c.id==addresses.c.user_id) #here without the where clause will give the Cartesian product of the users with that of the addresses.
+#selecting with the join
+result = con.execute(select_st)
+for row in result:
+    print("name: %s, full_name: %s, user_id: %s, email_address: %s"% (row["name"], row["full_name"], row["user_id"], row["email_address"])) # print the rows using the indexes
+
+result.close() #closed the result
+
+
 
